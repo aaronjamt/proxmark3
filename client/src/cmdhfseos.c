@@ -192,10 +192,12 @@ static void generate_command_wrapping(uint8_t *command_Header, int command_heade
     padToBlockSize(command_Header, command_header_len, block_size, padded_Command_Header);
 
     // Unencrypted Command is our actual command data
-    uint8_t padded_unencrypted_Command[block_size];
-    padToBlockSize(unencrypted_Command, unencrypted_command_len, block_size, padded_unencrypted_Command);
+    uint8_t padded_unencrypted_command_len = unencrypted_command_len;
+    if (padded_unencrypted_command_len % block_size) padded_unencrypted_command_len += block_size - (padded_unencrypted_command_len % block_size);
+    uint8_t padded_unencrypted_Command[padded_unencrypted_command_len];
+    padToBlockSize(unencrypted_Command, unencrypted_command_len, padded_unencrypted_command_len, padded_unencrypted_Command);
 
-    uint8_t padded_encrypted_Command[block_size];
+    uint8_t padded_encrypted_Command[padded_unencrypted_command_len];
     create_cryptogram(diversified_enc_key, padded_unencrypted_Command, padded_encrypted_Command, sizeof(padded_unencrypted_Command), encryption_algorithm);
 
     uint8_t asn1_tag_cryptograph[2] = {0x85, ARRAYLEN(padded_encrypted_Command)};
